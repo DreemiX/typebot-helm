@@ -163,7 +163,7 @@ typebot:
 
   viewerUrl: "https://bot.example.com"
   
-  adminEmail: ""
+  adminEmail: [""]
   disableSignup: false
   
   smtp:
