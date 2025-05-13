@@ -2,7 +2,7 @@ apiVersion: v2
 name: typebot
 description: A Helm chart for Typebot.io
 type: application
-version: 0.1.1
+version: 0.1.2
 appVersion: "latest"
 maintainers:
   - name: "Helm Chart Maintainer"

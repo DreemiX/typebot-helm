@@ -37,6 +37,8 @@ helm search repo typebot-helm
 helm install my-typebot typebot-helm/typebot -f values.yaml
 ```
 
+> **Примітка:** Статус репозиторію Helm все ще в процесі налаштування. Якщо ви отримуєте помилку "failed to fetch index.yaml", потрібно активувати GitHub Actions workflow для створення індексу та релізів. Див. розділ "Активація CI/CD" нижче.
+
 ## Конфігурація
 
 ### Мінімальна конфігурація
@@ -216,5 +218,24 @@ Helm chart доступний за URL:
 ```
 https://dreemix.github.io/typebot-helm/
 ```
+
+### Активація CI/CD
+
+Для правильної роботи CI/CD потрібно:
+
+1. Переконатися, що GitHub Pages налаштовано:
+   - Перейдіть у налаштування репозиторію > Pages
+   - У розділі "Build and deployment" виберіть "Deploy from a branch"
+   - Виберіть гілку "gh-pages" і вкажіть каталог "/ (root)"
+   - Натисніть "Save"
+
+2. Надати дозволи для GitHub Actions:
+   - Перейдіть у налаштування репозиторію > Actions > General
+   - У розділі "Workflow permissions" виберіть "Read and write permissions"
+   - Натисніть "Save"
+
+3. Внести зміни в Chart.yaml для запуску workflow:
+   - Змініть версію у файлі (наприклад, з `0.1.0` на `0.1.1`)
+   - Пушніть зміни в головну гілку репозиторію
 
 Для деталей налаштування дивіться файл [.github/workflows/README.md](.github/workflows/README.md). 

@@ -29,10 +29,11 @@ Workflow `release.yaml` виконує перевірку і публікує He
 
 Для правильної роботи цього workflow потрібно:
 
-1. Включити GitHub Pages для вашого репозиторію:
+1. Переконатися, що GitHub Pages налаштовано:
    - Перейдіть у налаштування репозиторію (Settings)
    - Виберіть "Pages" в бічному меню
-   - У розділі "Source" виберіть гілку "gh-pages" і каталог "/ (root)"
+   - У розділі "Build and deployment" виберіть "Deploy from a branch"
+   - Виберіть гілку "gh-pages" і каталог "/ (root)"
    - Натисніть "Save"
 
 2. Надати дозволи для workflow:
@@ -40,6 +41,25 @@ Workflow `release.yaml` виконує перевірку і публікує He
    - Виберіть "Actions" > "General" в бічному меню
    - У розділі "Workflow permissions" виберіть "Read and write permissions"
    - Натисніть "Save"
+
+3. Внести зміни для запуску workflow:
+   - Змініть версію у файлі Chart.yaml (наприклад, з `0.1.0` на `0.1.1`)
+   - Пушніть зміни в головну гілку репозиторію
+   - Перевірте статус виконання workflow у вкладці "Actions" репозиторію
+
+### Статус CI/CD
+
+На даний момент Helm chart доступний за URL:
+
+```
+https://dreemix.github.io/typebot-helm/
+```
+
+Якщо ви отримуєте помилку "failed to fetch index.yaml", це означає, що workflow ще не виконано успішно. Можливі причини:
+
+1. GitHub Actions workflow ще не був запущений або не завершився
+2. GitHub Pages не налаштовано правильно
+3. Відсутні потрібні дозволи для GitHub Actions
 
 ### Використання опублікованого chart
 
