@@ -2,20 +2,7 @@ apiVersion: v2
 name: typebot
 description: A Helm chart for Typebot.io
 type: application
-version: 0.1.6
+version: 0.1.7
 appVersion: "latest"
 maintainers:
   - name: "Helm Chart Maintainer"
-dependencies:
-  - name: postgresql
-    version: "16.x.x"
-    repository: "https://charts.bitnami.com/bitnami"
-    condition: postgresql.enabled
-  - name: redis
-    version: "18.x.x"
-    repository: "https://charts.bitnami.com/bitnami"
-    condition: redis.enabled
-  - name: minio
-    version: "13.x.x"
-    repository: "https://charts.bitnami.com/bitnami"
-    condition: minio.enabled 
