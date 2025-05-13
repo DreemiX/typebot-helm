@@ -47,7 +47,7 @@ data:
   NEXT_PUBLIC_VIEWER_URL: "{{ .Values.typebot.viewerUrl }}"
   
   {{- if .Values.typebot.adminEmail }}
-  ADMIN_EMAIL: "{{ .Values.typebot.adminEmail }}"
+  ADMIN_EMAIL: {{ .Values.typebot.adminEmail | toJson }}
   {{- end }}
   
   DISABLE_SIGNUP: "{{ .Values.typebot.disableSignup }}"
