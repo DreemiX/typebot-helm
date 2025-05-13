@@ -10,6 +10,8 @@
 
 ## Встановлення
 
+### З локального репозиторію
+
 ```bash
 # Спочатку додайте залежні репозиторії
 helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -17,6 +19,22 @@ helm repo update
 
 # Встановіть chart
 helm install my-typebot . -f values.yaml
+```
+
+### З GitHub Pages репозиторію
+
+Якщо chart опубліковано на GitHub Pages:
+
+```bash
+# Додайте репозиторій Helm
+helm repo add typebot-helm https://[ім'я користувача].github.io/[назва репозиторію]/
+helm repo update
+
+# Перегляньте доступні версії
+helm search repo typebot-helm
+
+# Встановіть chart
+helm install my-typebot typebot-helm/typebot -f values.yaml
 ```
 
 ## Конфігурація
@@ -188,4 +206,15 @@ externalStorage:
 helm install my-typebot . -f values.yaml
 ```
 
-4. Якщо ingress включено, перейдіть до вказаних URL-адрес. В іншому випадку використовуйте port-forwarding для доступу до сервісів. 
+4. Якщо ingress включено, перейдіть до вказаних URL-адрес. В іншому випадку використовуйте port-forwarding для доступу до сервісів.
+
+## CI/CD
+
+Цей репозиторій містить GitHub Actions workflow для автоматичної публікації Helm chart на GitHub Pages при пуші змін у файли Chart.yaml, values.yaml або шаблони.
+
+Після налаштування GitHub Pages у вашому репозиторії, ви зможете використовувати Helm chart за URL:
+```
+https://[ім'я користувача].github.io/[назва репозиторію]/
+```
+
+Для деталей налаштування дивіться файл [.github/workflows/README.md](.github/workflows/README.md). 
