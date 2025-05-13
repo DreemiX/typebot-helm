@@ -43,16 +43,16 @@ Workflow `release.yaml` виконує перевірку і публікує He
 
 ### Використання опублікованого chart
 
-Після успішного запуску workflow, ваш Helm chart буде доступний за адресою:
+Після успішного запуску workflow, Helm chart доступний за адресою:
 
 ```
-https://[ім'я користувача].github.io/[назва репозиторію]/
+https://dreemix.github.io/typebot-helm/
 ```
 
 Ви можете додати цей репозиторій в Helm:
 
 ```bash
-helm repo add typebot-helm https://[ім'я користувача].github.io/[назва репозиторію]/
+helm repo add typebot-helm https://dreemix.github.io/typebot-helm/
 helm repo update
 helm search repo typebot-helm
 ```

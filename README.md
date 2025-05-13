@@ -23,11 +23,11 @@ helm install my-typebot . -f values.yaml
 
 ### З GitHub Pages репозиторію
 
-Якщо chart опубліковано на GitHub Pages:
+Цей chart доступний через GitHub Pages:
 
 ```bash
 # Додайте репозиторій Helm
-helm repo add typebot-helm https://[ім'я користувача].github.io/[назва репозиторію]/
+helm repo add typebot-helm https://dreemix.github.io/typebot-helm/
 helm repo update
 
 # Перегляньте доступні версії
@@ -203,7 +203,7 @@ externalStorage:
 3. Встановіть chart:
 
 ```bash
-helm install my-typebot . -f values.yaml
+helm install my-typebot typebot-helm/typebot -f values.yaml
 ```
 
 4. Якщо ingress включено, перейдіть до вказаних URL-адрес. В іншому випадку використовуйте port-forwarding для доступу до сервісів.
@@ -212,9 +212,9 @@ helm install my-typebot . -f values.yaml
 
 Цей репозиторій містить GitHub Actions workflow для автоматичної публікації Helm chart на GitHub Pages при пуші змін у файли Chart.yaml, values.yaml або шаблони.
 
-Після налаштування GitHub Pages у вашому репозиторії, ви зможете використовувати Helm chart за URL:
+Helm chart доступний за URL:
 ```
-https://[ім'я користувача].github.io/[назва репозиторію]/
+https://dreemix.github.io/typebot-helm/
 ```
 
 Для деталей налаштування дивіться файл [.github/workflows/README.md](.github/workflows/README.md). 
