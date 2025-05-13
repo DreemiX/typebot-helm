@@ -13,7 +13,11 @@ data:
   
   # Redis Configuration
   {{- if or .Values.redis.enabled .Values.externalRedis.host }}
+  {{- if .Values.externalRedis.password }}
+  REDIS_URL: "redis://:{{ .Values.externalRedis.password }}@{{ include "typebot.redis.host" . }}:{{ include "typebot.redis.port" . }}"
+  {{- else }}
   REDIS_URL: "redis://{{ include "typebot.redis.host" . }}:{{ include "typebot.redis.port" . }}"
+  {{- end }}
   {{- end }}
   
   # S3/Storage Configuration
