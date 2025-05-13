@@ -1,0 +1,264 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "typebot.builder.name" . }}
+  labels:
+    {{- include "typebot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: builder
+spec:
+  replicas: {{ .Values.replicaCount.builder }}
+  selector:
+    matchLabels:
+      {{- include "typebot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: builder
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "typebot.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: builder
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "typebot.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-builder
+          securityContext:
+            {{- toYaml .Values.builder.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.builder.repository }}:{{ .Values.image.builder.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.builder.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.builder.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "typebot.fullname" . }}
+          env:
+            # If using existing secret for encryption
+            {{- if .Values.typebot.encryption.existingSecret }}
+            - name: ENCRYPTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.encryption.existingSecret }}
+                  key: {{ .Values.typebot.encryption.existingSecretKey | default "ENCRYPTION_SECRET" }}
+            {{- else }}
+            - name: ENCRYPTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "typebot.fullname" . }}
+                  key: ENCRYPTION_SECRET
+            {{- end }}
+            
+            # If using existing secret for S3/Storage
+            {{- if and (eq .Values.externalStorage.type "s3") .Values.externalStorage.s3.existingSecret }}
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalStorage.s3.existingSecret }}
+                  key: {{ .Values.externalStorage.s3.existingSecretAccessKeyKey | default "S3_ACCESS_KEY" }}
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalStorage.s3.existingSecret }}
+                  key: {{ .Values.externalStorage.s3.existingSecretSecretKeyKey | default "S3_SECRET_KEY" }}
+            {{- end }}
+            
+            # If using existing secret for GCP
+            {{- if and (eq .Values.externalStorage.type "gcp") .Values.externalStorage.gcp.existingSecret }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalStorage.gcp.existingSecret }}
+                  key: {{ .Values.externalStorage.gcp.existingSecretCredentialsKey | default "GOOGLE_APPLICATION_CREDENTIALS" }}
+            {{- end }}
+            
+            # If not using existing secret for GCP
+            {{- if and (eq .Values.externalStorage.type "gcp") (not .Values.externalStorage.gcp.existingSecret) }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "typebot.fullname" . }}
+                  key: GOOGLE_APPLICATION_CREDENTIALS
+            {{- end }}
+            
+            # Additional secrets referenced in values
+            {{- if .Values.typebot.nextauth.existingSecret }}
+            - name: NEXTAUTH_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.nextauth.existingSecret }}
+                  key: {{ .Values.typebot.nextauth.existingSecretKey | default "NEXTAUTH_URL" }}
+            {{- end }}
+            
+            # SMTP secrets
+            {{- if .Values.typebot.smtp.existingSecret }}
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.smtp.existingSecret }}
+                  key: {{ .Values.typebot.smtp.existingSecretUsernameKey | default "SMTP_USERNAME" }}
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.smtp.existingSecret }}
+                  key: {{ .Values.typebot.smtp.existingSecretPasswordKey | default "SMTP_PASSWORD" }}
+            {{- end }}
+            
+            # OAuth secrets
+            {{- if .Values.typebot.oauth.google.existingSecret }}
+            - name: GOOGLE_AUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.oauth.google.existingSecret }}
+                  key: {{ .Values.typebot.oauth.google.existingSecretClientIdKey | default "GOOGLE_AUTH_CLIENT_ID" }}
+            - name: GOOGLE_AUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.oauth.google.existingSecret }}
+                  key: {{ .Values.typebot.oauth.google.existingSecretClientSecretKey | default "GOOGLE_AUTH_CLIENT_SECRET" }}
+            {{- end }}
+            
+            {{- if .Values.typebot.oauth.github.existingSecret }}
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.oauth.github.existingSecret }}
+                  key: {{ .Values.typebot.oauth.github.existingSecretClientIdKey | default "GITHUB_CLIENT_ID" }}
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.oauth.github.existingSecret }}
+                  key: {{ .Values.typebot.oauth.github.existingSecretClientSecretKey | default "GITHUB_CLIENT_SECRET" }}
+            {{- end }}
+            
+            {{- if .Values.typebot.oauth.facebook.existingSecret }}
+            - name: FACEBOOK_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.oauth.facebook.existingSecret }}
+                  key: {{ .Values.typebot.oauth.facebook.existingSecretClientIdKey | default "FACEBOOK_CLIENT_ID" }}
+            - name: FACEBOOK_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.oauth.facebook.existingSecret }}
+                  key: {{ .Values.typebot.oauth.facebook.existingSecretClientSecretKey | default "FACEBOOK_CLIENT_SECRET" }}
+            {{- end }}
+            
+            {{- if .Values.typebot.oauth.gitlab.existingSecret }}
+            - name: GITLAB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.oauth.gitlab.existingSecret }}
+                  key: {{ .Values.typebot.oauth.gitlab.existingSecretClientIdKey | default "GITLAB_CLIENT_ID" }}
+            - name: GITLAB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.oauth.gitlab.existingSecret }}
+                  key: {{ .Values.typebot.oauth.gitlab.existingSecretClientSecretKey | default "GITLAB_CLIENT_SECRET" }}
+            {{- end }}
+            
+            # Integration secrets
+            {{- if .Values.typebot.integrations.googleSheets.existingSecret }}
+            - name: GOOGLE_SHEETS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.googleSheets.existingSecret }}
+                  key: {{ .Values.typebot.integrations.googleSheets.existingSecretClientIdKey | default "GOOGLE_SHEETS_CLIENT_ID" }}
+            - name: GOOGLE_SHEETS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.googleSheets.existingSecret }}
+                  key: {{ .Values.typebot.integrations.googleSheets.existingSecretClientSecretKey | default "GOOGLE_SHEETS_CLIENT_SECRET" }}
+            - name: NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.googleSheets.existingSecret }}
+                  key: {{ .Values.typebot.integrations.googleSheets.existingSecretApiKeyKey | default "NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY" }}
+            {{- end }}
+            
+            {{- if .Values.typebot.integrations.googleFonts.existingSecret }}
+            - name: NEXT_PUBLIC_GOOGLE_FONTS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.googleFonts.existingSecret }}
+                  key: {{ .Values.typebot.integrations.googleFonts.existingSecretApiKeyKey | default "NEXT_PUBLIC_GOOGLE_FONTS_API_KEY" }}
+            {{- end }}
+            
+            {{- if .Values.typebot.integrations.giphy.existingSecret }}
+            - name: NEXT_PUBLIC_GIPHY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.giphy.existingSecret }}
+                  key: {{ .Values.typebot.integrations.giphy.existingSecretApiKeyKey | default "NEXT_PUBLIC_GIPHY_API_KEY" }}
+            {{- end }}
+            
+            {{- if .Values.typebot.integrations.unsplash.existingSecret }}
+            - name: NEXT_PUBLIC_UNSPLASH_APP_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.unsplash.existingSecret }}
+                  key: {{ .Values.typebot.integrations.unsplash.existingSecretAppNameKey | default "NEXT_PUBLIC_UNSPLASH_APP_NAME" }}
+            - name: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.unsplash.existingSecret }}
+                  key: {{ .Values.typebot.integrations.unsplash.existingSecretAccessKeyKey | default "NEXT_PUBLIC_UNSPLASH_ACCESS_KEY" }}
+            {{- end }}
+            
+            {{- if .Values.typebot.integrations.pexels.existingSecret }}
+            - name: NEXT_PUBLIC_PEXELS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.pexels.existingSecret }}
+                  key: {{ .Values.typebot.integrations.pexels.existingSecretApiKeyKey | default "NEXT_PUBLIC_PEXELS_API_KEY" }}
+            {{- end }}
+            
+            {{- if .Values.typebot.integrations.whatsapp.existingSecret }}
+            - name: META_SYSTEM_USER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.whatsapp.existingSecret }}
+                  key: {{ .Values.typebot.integrations.whatsapp.existingSecretSystemUserTokenKey | default "META_SYSTEM_USER_TOKEN" }}
+            {{- end }}
+            
+            {{- if .Values.typebot.integrations.partykit.existingSecret }}
+            - name: NEXT_PUBLIC_PARTYKIT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.partykit.existingSecret }}
+                  key: {{ .Values.typebot.integrations.partykit.existingSecretHostKey | default "NEXT_PUBLIC_PARTYKIT_HOST" }}
+            {{- end }}
+      {{- with .Values.builder.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.builder.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.builder.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }} 

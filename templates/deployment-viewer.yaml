@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "typebot.viewer.name" . }}
+  labels:
+    {{- include "typebot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: viewer
+spec:
+  replicas: {{ .Values.replicaCount.viewer }}
+  selector:
+    matchLabels:
+      {{- include "typebot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: viewer
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "typebot.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: viewer
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "typebot.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-viewer
+          securityContext:
+            {{- toYaml .Values.viewer.securityContext | nindent 12 }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.viewer.repository }}:{{ .Values.image.viewer.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.viewer.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.viewer.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "typebot.fullname" . }}
+          env:
+            # If using existing secret for encryption
+            {{- if .Values.typebot.encryption.existingSecret }}
+            - name: ENCRYPTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.encryption.existingSecret }}
+                  key: {{ .Values.typebot.encryption.existingSecretKey | default "ENCRYPTION_SECRET" }}
+            {{- else }}
+            - name: ENCRYPTION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "typebot.fullname" . }}
+                  key: ENCRYPTION_SECRET
+            {{- end }}
+            
+            # If using existing secret for S3/Storage
+            {{- if and (eq .Values.externalStorage.type "s3") .Values.externalStorage.s3.existingSecret }}
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalStorage.s3.existingSecret }}
+                  key: {{ .Values.externalStorage.s3.existingSecretAccessKeyKey | default "S3_ACCESS_KEY" }}
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalStorage.s3.existingSecret }}
+                  key: {{ .Values.externalStorage.s3.existingSecretSecretKeyKey | default "S3_SECRET_KEY" }}
+            {{- end }}
+            
+            # If using existing secret for GCP
+            {{- if and (eq .Values.externalStorage.type "gcp") .Values.externalStorage.gcp.existingSecret }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalStorage.gcp.existingSecret }}
+                  key: {{ .Values.externalStorage.gcp.existingSecretCredentialsKey | default "GOOGLE_APPLICATION_CREDENTIALS" }}
+            {{- end }}
+            
+            # If not using existing secret for GCP
+            {{- if and (eq .Values.externalStorage.type "gcp") (not .Values.externalStorage.gcp.existingSecret) }}
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "typebot.fullname" . }}
+                  key: GOOGLE_APPLICATION_CREDENTIALS
+            {{- end }}
+            
+            # Additional secrets referenced in values
+            {{- if .Values.typebot.integrations.whatsapp.existingSecret }}
+            - name: META_SYSTEM_USER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.whatsapp.existingSecret }}
+                  key: {{ .Values.typebot.integrations.whatsapp.existingSecretSystemUserTokenKey | default "META_SYSTEM_USER_TOKEN" }}
+            {{- end }}
+            
+            {{- if .Values.typebot.integrations.partykit.existingSecret }}
+            - name: NEXT_PUBLIC_PARTYKIT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.typebot.integrations.partykit.existingSecret }}
+                  key: {{ .Values.typebot.integrations.partykit.existingSecretHostKey | default "NEXT_PUBLIC_PARTYKIT_HOST" }}
+            {{- end }}
+      {{- with .Values.viewer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.viewer.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.viewer.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }} 

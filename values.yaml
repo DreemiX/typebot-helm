@@ -1,0 +1,273 @@
+nameOverride: ""
+fullnameOverride: ""
+
+replicaCount:
+  builder: 1
+  viewer: 1
+
+image:
+  registry: docker.io
+  builder:
+    repository: baptistearno/typebot-builder
+    tag: latest
+    pullPolicy: IfNotPresent
+  viewer:
+    repository: baptistearno/typebot-viewer
+    tag: latest
+    pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+
+builder:
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  securityContext: {}
+
+viewer:
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 3000
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  securityContext: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    builder:
+      host: typebot.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+    viewer:
+      host: bot.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+# Database Configuration
+postgresql:
+  enabled: true
+  auth:
+    username: postgres
+    password: typebot
+    database: typebot
+  primary:
+    persistence:
+      size: 1Gi
+
+# External PostgreSQL Configuration (used if postgresql.enabled is false)
+externalDatabase:
+  host: ""
+  port: 5432
+  user: postgres
+  password: ""
+  database: typebot
+  existingSecret: ""
+  existingSecretPasswordKey: ""
+
+# Redis Configuration
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      size: 1Gi
+
+# External Redis Configuration (used if redis.enabled is false)
+externalRedis:
+  host: ""
+  port: 6379
+  password: ""
+  existingSecret: ""
+  existingSecretPasswordKey: ""
+
+# MinIO Configuration (for S3 storage)
+minio:
+  enabled: true
+  auth:
+    rootUser: minio
+    rootPassword: minio123
+  defaultBuckets: "typebot"
+  persistence:
+    size: 10Gi
+
+# External S3/Object Storage Configuration (used if minio.enabled is false)
+externalStorage:
+  type: "s3" # s3 or gcp
+  s3:
+    accessKey: ""
+    secretKey: ""
+    bucket: "typebot"
+    endpoint: ""
+    port: ""
+    region: ""
+    ssl: true
+    publicCustomDomain: ""
+    existingSecret: ""
+    existingSecretAccessKeyKey: ""
+    existingSecretSecretKeyKey: ""
+  gcp:
+    bucket: ""
+    credentials: ""
+    existingSecret: ""
+    existingSecretCredentialsKey: ""
+
+# Typebot Configuration
+typebot:
+  encryption:
+    secret: "changeme-32-character-encryption-key"
+    existingSecret: ""
+    existingSecretKey: ""
+  
+  # Authentication
+  nextauth:
+    url: "https://typebot.example.com"
+    existingSecret: ""
+    existingSecretKey: ""
+
+  viewerUrl: "https://bot.example.com"
+  
+  adminEmail: ""
+  disableSignup: false
+  
+  smtp:
+    host: ""
+    port: 25
+    username: ""
+    password: ""
+    from: ""
+    secure: false
+    ignoreTLS: false
+    existingSecret: ""
+    existingSecretUsernameKey: ""
+    existingSecretPasswordKey: ""
+
+  # OAuth Providers
+  oauth:
+    google:
+      clientId: ""
+      clientSecret: ""
+      existingSecret: ""
+      existingSecretClientIdKey: ""
+      existingSecretClientSecretKey: ""
+    github:
+      clientId: ""
+      clientSecret: ""
+      existingSecret: ""
+      existingSecretClientIdKey: ""
+      existingSecretClientSecretKey: ""
+    facebook:
+      clientId: ""
+      clientSecret: ""
+      existingSecret: ""
+      existingSecretClientIdKey: ""
+      existingSecretClientSecretKey: ""
+    gitlab:
+      clientId: ""
+      clientSecret: ""
+      baseUrl: "https://gitlab.com"
+      requiredGroups: ""
+      name: "GitLab"
+      existingSecret: ""
+      existingSecretClientIdKey: ""
+      existingSecretClientSecretKey: ""
+    azure:
+      clientId: ""
+      clientSecret: ""
+      tenantId: ""
+      existingSecret: ""
+      existingSecretClientIdKey: ""
+      existingSecretClientSecretKey: ""
+      existingSecretTenantIdKey: ""
+    custom:
+      name: "Custom OAuth"
+      clientId: ""
+      clientSecret: ""
+      wellKnownUrl: ""
+      issuerUrl: ""
+      userIdPath: "id"
+      userNamePath: "name"
+      userEmailPath: "email"
+      userImagePath: "image"
+      scope: "openid profile email"
+      existingSecret: ""
+      existingSecretClientIdKey: ""
+      existingSecretClientSecretKey: ""
+  
+  # Integration APIs
+  integrations:
+    googleSheets:
+      clientId: ""
+      clientSecret: ""
+      apiKey: ""
+      existingSecret: ""
+      existingSecretClientIdKey: ""
+      existingSecretClientSecretKey: ""
+      existingSecretApiKeyKey: ""
+    googleFonts:
+      apiKey: ""
+      existingSecret: ""
+      existingSecretApiKeyKey: ""
+    giphy:
+      apiKey: ""
+      existingSecret: ""
+      existingSecretApiKeyKey: ""
+    unsplash:
+      appName: ""
+      accessKey: ""
+      existingSecret: ""
+      existingSecretAppNameKey: ""
+      existingSecretAccessKeyKey: ""
+    pexels:
+      apiKey: ""
+      existingSecret: ""
+      existingSecretApiKeyKey: ""
+    whatsapp:
+      systemUserToken: ""
+      phoneNumberId: ""
+      templateName: ""
+      templateLang: "en_US"
+      cloudApiUrl: "https://graph.facebook.com"
+      interactiveGroupSize: 3
+      existingSecret: ""
+      existingSecretSystemUserTokenKey: ""
+    partykit:
+      host: ""
+      existingSecret: ""
+      existingSecretHostKey: "" 

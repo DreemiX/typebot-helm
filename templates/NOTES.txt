@@ -1,0 +1,45 @@
+Thank you for installing {{ .Chart.Name }}.
+
+{{- if .Values.ingress.enabled }}
+Your application is available at:
+
+Builder: https://{{ .Values.ingress.hosts.builder.host }}
+Viewer: https://{{ .Values.ingress.hosts.viewer.host }}
+{{- else }}
+To access your application, run the following commands:
+
+# For the Builder
+kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "typebot.builder.name" . }} 8080:{{ .Values.builder.service.port }}
+
+The Builder will be available at: http://localhost:8080
+
+# For the Viewer
+kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "typebot.viewer.name" . }} 8081:{{ .Values.viewer.service.port }}
+
+The Viewer will be available at: http://localhost:8081
+
+Alternatively, you can set up an Ingress controller to expose these services.
+{{- end }}
+
+{{- if .Values.postgresql.enabled }}
+A PostgreSQL database has been deployed as part of this release.
+{{- else }}
+Using external PostgreSQL database at: {{ .Values.externalDatabase.host }}
+{{- end }}
+
+{{- if .Values.redis.enabled }}
+A Redis instance has been deployed as part of this release.
+{{- else if .Values.externalRedis.host }}
+Using external Redis at: {{ .Values.externalRedis.host }}
+{{- end }}
+
+{{- if .Values.minio.enabled }}
+A MinIO instance (S3-compatible storage) has been deployed as part of this release.
+{{- else if eq .Values.externalStorage.type "s3" }}
+Using external S3 storage at: {{ .Values.externalStorage.s3.endpoint }}
+{{- else if eq .Values.externalStorage.type "gcp" }}
+Using Google Cloud Storage bucket: {{ .Values.externalStorage.gcp.bucket }}
+{{- end }}
+
+For more information on configuring Typebot, please visit:
+https://docs.typebot.io/self-hosting/configuration 

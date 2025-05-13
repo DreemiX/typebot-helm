@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "typebot.fullname" . }}
+  labels:
+    {{- include "typebot.labels" . | nindent 4 }}
+data:
+  NODE_OPTIONS: "--no-node-snapshot"
+  SKIP_ENV_CHECK: "true"
+  
+  # Database Configuration
+  DATABASE_URL: "postgresql://{{ include "typebot.postgresql.username" . }}:{{ include "typebot.postgresql.password" . }}@{{ include "typebot.postgresql.host" . }}:{{ include "typebot.postgresql.port" . }}/{{ include "typebot.postgresql.database" . }}"
+  
+  # Redis Configuration
+  {{- if or .Values.redis.enabled .Values.externalRedis.host }}
+  REDIS_URL: "redis://{{ include "typebot.redis.host" . }}:{{ include "typebot.redis.port" . }}"
+  {{- end }}
+  
+  # S3/Storage Configuration
+  {{- if eq .Values.externalStorage.type "s3" }}
+  S3_ACCESS_KEY: "{{ include "typebot.s3.accessKey" . }}"
+  S3_SECRET_KEY: "{{ include "typebot.s3.secretKey" . }}"
+  S3_BUCKET: "{{ include "typebot.s3.bucket" . }}"
+  S3_ENDPOINT: "{{ include "typebot.s3.endpoint" . }}"
+  {{- if .Values.externalStorage.s3.port }}
+  S3_PORT: "{{ include "typebot.s3.port" . }}"
+  {{- end }}
+  {{- if .Values.externalStorage.s3.region }}
+  S3_REGION: "{{ .Values.externalStorage.s3.region }}"
+  {{- end }}
+  S3_SSL: "{{ include "typebot.s3.ssl" . }}"
+  {{- if .Values.externalStorage.s3.publicCustomDomain }}
+  S3_PUBLIC_CUSTOM_DOMAIN: "{{ .Values.externalStorage.s3.publicCustomDomain }}"
+  {{- end }}
+  {{- end }}
+  
+  {{- if eq .Values.externalStorage.type "gcp" }}
+  GCP_BUCKET: "{{ .Values.externalStorage.gcp.bucket }}"
+  {{- end }}
+  
+  # TypeBot Configuration
+  NEXTAUTH_URL: "{{ .Values.typebot.nextauth.url }}"
+  NEXT_PUBLIC_VIEWER_URL: "{{ .Values.typebot.viewerUrl }}"
+  
+  {{- if .Values.typebot.adminEmail }}
+  ADMIN_EMAIL: "{{ .Values.typebot.adminEmail }}"
+  {{- end }}
+  
+  DISABLE_SIGNUP: "{{ .Values.typebot.disableSignup }}"
+  
+  # SMTP Configuration
+  {{- if .Values.typebot.smtp.host }}
+  SMTP_HOST: "{{ .Values.typebot.smtp.host }}"
+  SMTP_PORT: "{{ .Values.typebot.smtp.port }}"
+  SMTP_USERNAME: "{{ .Values.typebot.smtp.username }}"
+  SMTP_PASSWORD: "{{ .Values.typebot.smtp.password }}"
+  NEXT_PUBLIC_SMTP_FROM: "{{ .Values.typebot.smtp.from }}"
+  SMTP_SECURE: "{{ .Values.typebot.smtp.secure }}"
+  SMTP_IGNORE_TLS: "{{ .Values.typebot.smtp.ignoreTLS }}"
+  {{- end }}
+  
+  # OAuth Providers
+  {{- if and .Values.typebot.oauth.google.clientId .Values.typebot.oauth.google.clientSecret }}
+  GOOGLE_AUTH_CLIENT_ID: "{{ .Values.typebot.oauth.google.clientId }}"
+  GOOGLE_AUTH_CLIENT_SECRET: "{{ .Values.typebot.oauth.google.clientSecret }}"
+  {{- end }}
+  
+  {{- if and .Values.typebot.oauth.github.clientId .Values.typebot.oauth.github.clientSecret }}
+  GITHUB_CLIENT_ID: "{{ .Values.typebot.oauth.github.clientId }}"
+  GITHUB_CLIENT_SECRET: "{{ .Values.typebot.oauth.github.clientSecret }}"
+  {{- end }}
+  
+  {{- if and .Values.typebot.oauth.facebook.clientId .Values.typebot.oauth.facebook.clientSecret }}
+  FACEBOOK_CLIENT_ID: "{{ .Values.typebot.oauth.facebook.clientId }}"
+  FACEBOOK_CLIENT_SECRET: "{{ .Values.typebot.oauth.facebook.clientSecret }}"
+  {{- end }}
+  
+  {{- if and .Values.typebot.oauth.gitlab.clientId .Values.typebot.oauth.gitlab.clientSecret }}
+  GITLAB_CLIENT_ID: "{{ .Values.typebot.oauth.gitlab.clientId }}"
+  GITLAB_CLIENT_SECRET: "{{ .Values.typebot.oauth.gitlab.clientSecret }}"
+  GITLAB_BASE_URL: "{{ .Values.typebot.oauth.gitlab.baseUrl }}"
+  {{- if .Values.typebot.oauth.gitlab.requiredGroups }}
+  GITLAB_REQUIRED_GROUPS: "{{ .Values.typebot.oauth.gitlab.requiredGroups }}"
+  {{- end }}
+  GITLAB_NAME: "{{ .Values.typebot.oauth.gitlab.name }}"
+  {{- end }}
+  
+  {{- if and .Values.typebot.oauth.azure.clientId .Values.typebot.oauth.azure.clientSecret .Values.typebot.oauth.azure.tenantId }}
+  AZURE_AD_CLIENT_ID: "{{ .Values.typebot.oauth.azure.clientId }}"
+  AZURE_AD_CLIENT_SECRET: "{{ .Values.typebot.oauth.azure.clientSecret }}"
+  AZURE_AD_TENANT_ID: "{{ .Values.typebot.oauth.azure.tenantId }}"
+  {{- end }}
+  
+  {{- if and .Values.typebot.oauth.custom.clientId .Values.typebot.oauth.custom.clientSecret }}
+  CUSTOM_OAUTH_NAME: "{{ .Values.typebot.oauth.custom.name }}"
+  CUSTOM_OAUTH_CLIENT_ID: "{{ .Values.typebot.oauth.custom.clientId }}"
+  CUSTOM_OAUTH_CLIENT_SECRET: "{{ .Values.typebot.oauth.custom.clientSecret }}"
+  {{- if .Values.typebot.oauth.custom.wellKnownUrl }}
+  CUSTOM_OAUTH_WELL_KNOWN_URL: "{{ .Values.typebot.oauth.custom.wellKnownUrl }}"
+  {{- end }}
+  {{- if .Values.typebot.oauth.custom.issuerUrl }}
+  CUSTOM_OAUTH_ISSUER_URL: "{{ .Values.typebot.oauth.custom.issuerUrl }}"
+  {{- end }}
+  CUSTOM_OAUTH_USER_ID_PATH: "{{ .Values.typebot.oauth.custom.userIdPath }}"
+  CUSTOM_OAUTH_USER_NAME_PATH: "{{ .Values.typebot.oauth.custom.userNamePath }}"
+  CUSTOM_OAUTH_USER_EMAIL_PATH: "{{ .Values.typebot.oauth.custom.userEmailPath }}"
+  CUSTOM_OAUTH_USER_IMAGE_PATH: "{{ .Values.typebot.oauth.custom.userImagePath }}"
+  CUSTOM_OAUTH_SCOPE: "{{ .Values.typebot.oauth.custom.scope }}"
+  {{- end }}
+  
+  # Integrations
+  {{- if and .Values.typebot.integrations.googleSheets.clientId .Values.typebot.integrations.googleSheets.clientSecret }}
+  GOOGLE_SHEETS_CLIENT_ID: "{{ .Values.typebot.integrations.googleSheets.clientId }}"
+  GOOGLE_SHEETS_CLIENT_SECRET: "{{ .Values.typebot.integrations.googleSheets.clientSecret }}"
+  {{- end }}
+  
+  {{- if .Values.typebot.integrations.googleSheets.apiKey }}
+  NEXT_PUBLIC_GOOGLE_SHEETS_API_KEY: "{{ .Values.typebot.integrations.googleSheets.apiKey }}"
+  {{- end }}
+  
+  {{- if .Values.typebot.integrations.googleFonts.apiKey }}
+  NEXT_PUBLIC_GOOGLE_FONTS_API_KEY: "{{ .Values.typebot.integrations.googleFonts.apiKey }}"
+  {{- end }}
+  
+  {{- if .Values.typebot.integrations.giphy.apiKey }}
+  NEXT_PUBLIC_GIPHY_API_KEY: "{{ .Values.typebot.integrations.giphy.apiKey }}"
+  {{- end }}
+  
+  {{- if and .Values.typebot.integrations.unsplash.appName .Values.typebot.integrations.unsplash.accessKey }}
+  NEXT_PUBLIC_UNSPLASH_APP_NAME: "{{ .Values.typebot.integrations.unsplash.appName }}"
+  NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: "{{ .Values.typebot.integrations.unsplash.accessKey }}"
+  {{- end }}
+  
+  {{- if .Values.typebot.integrations.pexels.apiKey }}
+  NEXT_PUBLIC_PEXELS_API_KEY: "{{ .Values.typebot.integrations.pexels.apiKey }}"
+  {{- end }}
+  
+  {{- if and .Values.typebot.integrations.whatsapp.systemUserToken .Values.typebot.integrations.whatsapp.phoneNumberId }}
+  META_SYSTEM_USER_TOKEN: "{{ .Values.typebot.integrations.whatsapp.systemUserToken }}"
+  WHATSAPP_PREVIEW_FROM_PHONE_NUMBER_ID: "{{ .Values.typebot.integrations.whatsapp.phoneNumberId }}"
+  {{- if .Values.typebot.integrations.whatsapp.templateName }}
+  WHATSAPP_PREVIEW_TEMPLATE_NAME: "{{ .Values.typebot.integrations.whatsapp.templateName }}"
+  {{- end }}
+  WHATSAPP_PREVIEW_TEMPLATE_LANG: "{{ .Values.typebot.integrations.whatsapp.templateLang }}"
+  WHATSAPP_CLOUD_API_URL: "{{ .Values.typebot.integrations.whatsapp.cloudApiUrl }}"
+  WHATSAPP_INTERACTIVE_GROUP_SIZE: "{{ .Values.typebot.integrations.whatsapp.interactiveGroupSize }}"
+  {{- end }}
+  
+  {{- if .Values.typebot.integrations.partykit.host }}
+  NEXT_PUBLIC_PARTYKIT_HOST: "{{ .Values.typebot.integrations.partykit.host }}"
+  {{- end }} 

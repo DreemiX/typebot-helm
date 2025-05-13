@@ -1,0 +1,120 @@
+# Приклад значень для розгортання Typebot з використанням зовнішніх сервісів
+
+# Вимкнення локальних сервісів
+postgresql:
+  enabled: false
+redis:
+  enabled: false
+minio:
+  enabled: false
+
+# Налаштування зовнішніх сервісів
+externalDatabase:
+  host: "pg-database-host"
+  port: 5432
+  user: "postgres"
+  password: "postgres-password" # Або використовуйте existingSecret
+  database: "typebot"
+
+externalRedis:
+  host: "redis-host"
+  port: 6379
+  password: "redis-password" # Або використовуйте existingSecret
+
+# Використання зовнішнього S3-сумісного сховища
+externalStorage:
+  type: "s3"
+  s3:
+    accessKey: "your-access-key"
+    secretKey: "your-secret-key"
+    bucket: "typebot"
+    endpoint: "s3.amazonaws.com"
+    region: "us-east-1"
+    ssl: true
+
+# Або використовуйте GCP Storage
+# externalStorage:
+#   type: "gcp"
+#   gcp:
+#     bucket: "your-gcp-bucket"
+#     credentials: |
+#       {
+#         "type": "service_account",
+#         "project_id": "your-project",
+#         "private_key_id": "key-id",
+#         "private_key": "-----BEGIN PRIVATE KEY-----\nkey-content\n-----END PRIVATE KEY-----\n",
+#         "client_email": "service-account@project.iam.gserviceaccount.com",
+#         "client_id": "client-id",
+#         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+#         "token_uri": "https://oauth2.googleapis.com/token",
+#         "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+#         "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/service-account%40project.iam.gserviceaccount.com"
+#       }
+
+# Налаштування Typebot
+typebot:
+  encryption:
+    secret: "your-32-character-encryption-secret"
+  
+  nextauth:
+    url: "https://typebot.example.com"
+  
+  viewerUrl: "https://bot.example.com"
+  
+  adminEmail: "admin@example.com"
+  disableSignup: false
+  
+  # SMTP налаштування для відправки сповіщень
+  smtp:
+    host: "smtp.example.com"
+    port: 587
+    username: "smtp-user"
+    password: "smtp-password"
+    from: "Typebot <notifications@example.com>"
+    secure: false
+    ignoreTLS: false
+
+# Ingress налаштування для доступу через домени
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    builder:
+      host: typebot.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+    viewer:
+      host: bot.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - typebot.example.com
+      secretName: typebot-tls
+    - hosts:
+        - bot.example.com
+      secretName: bot-tls
+
+# Налаштування ресурсів
+builder:
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+
+viewer:
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi 

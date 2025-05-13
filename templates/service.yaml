@@ -1,0 +1,36 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "typebot.builder.name" . }}
+  labels:
+    {{- include "typebot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: builder
+spec:
+  type: {{ .Values.builder.service.type }}
+  ports:
+    - port: {{ .Values.builder.service.port }}
+      targetPort: {{ .Values.builder.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "typebot.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: builder
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "typebot.viewer.name" . }}
+  labels:
+    {{- include "typebot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: viewer
+spec:
+  type: {{ .Values.viewer.service.type }}
+  ports:
+    - port: {{ .Values.viewer.service.port }}
+      targetPort: {{ .Values.viewer.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "typebot.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: viewer 
