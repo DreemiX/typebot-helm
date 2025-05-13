@@ -80,7 +80,7 @@ ingress:
 
 # Database Configuration
 postgresql:
-  enabled: true
+  enabled: false
   auth:
     username: postgres
     password: typebot
@@ -101,7 +101,7 @@ externalDatabase:
 
 # Redis Configuration
 redis:
-  enabled: true
+  enabled: false
   architecture: standalone
   auth:
     enabled: false
