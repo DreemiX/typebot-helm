@@ -1,6 +1,6 @@
 owner: dreemix
 git-repo: typebot-helm
 package-path: .cr-release-packages
-index-path: gh-pages
+index-path: gh-pages/index.yaml
 pages-branch: gh-pages
 charts-repo: https://dreemix.github.io/typebot-helm 

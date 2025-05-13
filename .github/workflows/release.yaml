@@ -78,11 +78,18 @@ jobs:
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo update
 
+      - name: Create gh-pages directory
+        run: |
+          mkdir -p gh-pages
+          touch gh-pages/.nojekyll
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.5.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_RELEASE_NAME_TEMPLATE: "typebot-helm-chart-{{ .Version }}"
+          CR_INDEX_PATH: "gh-pages/index.yaml"
+          CR_PACKAGE_PATH: ".cr-release-packages"
         with:
           charts_dir: "."
           config: cr.yaml
@@ -92,4 +99,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./gh-pages
-          publish_branch: gh-pages 
+          publish_branch: gh-pages
+          force_orphan: true 
